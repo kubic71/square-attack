@@ -25,7 +25,8 @@ def load_cifar10(n_ex):
 
 def load_imagenet(n_ex, size=224):
     IMAGENET_SL = size
-    IMAGENET_PATH = "/scratch/maksym/imagenet/val_orig"
+    # IMAGENET_PATH = "/scratch/maksym/imagenet/val_orig"
+    IMAGENET_PATH = "dataset"
     imagenet = ImageFolder(IMAGENET_PATH,
                            transforms.Compose([
                                transforms.Resize(IMAGENET_SL),
@@ -46,5 +47,5 @@ datasets_dict = {'mnist': load_mnist,
 }
 bs_dict = {'mnist': 10000,
            'cifar10': 4096,  # 4096 is the maximum that fits
-           'imagenet': 100,
+           'imagenet': 1,
 }

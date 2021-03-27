@@ -13,3 +13,9 @@ secret.zip
 *.pyc
 
 .idea/
+
+
+
+output/
+exps/
+keys/

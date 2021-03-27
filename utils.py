@@ -1,4 +1,6 @@
 import numpy as np
+from PIL import Image, ImageDraw
+
 import os
 
 
@@ -36,3 +38,5 @@ def random_classes_except_current(y_test, n_cls):
 def softmax(x):
     e_x = np.exp(x - np.max(x, axis=1, keepdims=True))
     return e_x / e_x.sum(axis=1, keepdims=True)
+
+

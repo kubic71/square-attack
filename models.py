@@ -1,4 +1,8 @@
 import torch
+import pathlib
+import utils
+import img_utils
+import gvision_utils
 import tensorflow as tf
 import numpy as np
 import math
@@ -37,6 +41,95 @@ class Model:
         return loss.flatten()
 
 
+class ImgSaveWrapper(Model):
+
+    def __init__(self, model):
+        self.model = model
+        self.counter = 0
+
+    def predict(self, x):
+        logits = self.model.predict(x)
+
+        img = img_utils.convert_to_pillow(x[0])
+        img = img_utils.write_text_to_img(img, f"Iter: {self.counter}")
+        img.save(f"output/saved_img_{self.counter}.png")
+
+        self.counter += 1
+
+        return logits
+
+
+class GVisionModel:
+    """Returns 2 simulated logits corresponding to correct class and incorrect class, such that attack has signal for optimization"""
+
+    def __init__(self, correct_labelset=['cat'], exp_name="saved_img", save_location="output", loss_margin=1):
+        self.labelset = correct_labelset
+        self.save_location = save_location
+        self.exp_name = exp_name
+        self.counter = 0
+        self.loss_margin = loss_margin
+        self.best_loss = np.inf
+
+        pathlib.Path(save_location).mkdir(parents=True, exist_ok=True)
+
+        with open(f"{save_location}/labels.txt", "w") as f:
+            f.write(", ".join(correct_labelset))
+
+    def predict(self, x):
+        if x.shape[0] != 1:
+            raise AssertionError("Batch size must be 1")
+
+        x = x[0]
+        results = gvision_utils.gvision_classify_numpy(x)
+        print(str(results))
+
+        self.counter += 1
+
+        logits = self._compute_logits(results)
+
+        current_loss = self.loss(y=None, logits=logits)
+        if current_loss < self.best_loss:
+            self.best_loss = current_loss
+            img = img_utils.convert_to_pillow(x)
+            img = img_utils.write_text_to_img(img, f"Iter: {self.counter}\n{results}")
+            img.save(f"{self.save_location}/{self.exp_name}_{self.counter}.png")
+
+        return logits
+
+
+    def _compute_logits(self, results):
+        """Confidence score of the correct and 2nd best class"""
+        matching_results = results.match(self.labelset)
+        other_results = results.match(self.labelset, inverse=True)
+
+
+        print("Matching results:")
+        print(matching_results)
+        
+
+        print("Matching results:")
+        print(other_results)
+
+
+        print(f"Top label: {matching_results.top_label} - {matching_results.top_score}")
+        print(f"2nd best: {other_results.top_label} - {other_results.top_score}")
+
+        print(f"Logits: [{matching_results.top_score}, {other_results.top_score}]")
+        return np.array([[matching_results.top_score, other_results.top_score]])
+
+    def loss(self, y, logits, targeted=False, loss_type='margin_loss'):
+        """ Implements the margin loss (difference between the correct and 2nd best class). """
+
+        if logits.shape[0] != 1:
+            raise AssertionError("Batch size must be 1")
+        if targeted:
+            raise AssertionError("Targeted attack should be done by modifying the logit computation procedure")
+        if loss_type != 'margin_loss':
+            raise AssertionError("Gvision model only supports margin loss") 
+
+        correct, second_best = logits[0]
+        return np.array([correct - second_best + self.loss_margin])
+
 class ModelTF(Model):
     """
     Wrapper class around TensorFlow models.
@@ -74,6 +167,8 @@ class ModelTF(Model):
             x_batch = x[i*self.batch_size:(i+1)*self.batch_size]
             logits = self.sess.run(self.model.logits, feed_dict={self.model.x_input: x_batch})
             logits_list.append(logits)
+        
+        print(logits_list)
         logits = np.vstack(logits_list)
         return logits
 
@@ -147,6 +242,7 @@ model_class_dict = {'pt_vgg': torch_models.vgg16_bn,
                     'lsq_cifar10': lp_model_cifar10,
                     'pt_post_avg_cifar10': post_avg_cifar10_resnet,
                     'pt_post_avg_imagenet': post_avg_imagenet_resnet,
+                    'gvision': GVisionModel
                     }
 all_model_names = list(model_class_dict.keys())
 

@@ -109,8 +109,10 @@ def square_attack_l2(model, x, y, corr_classified, eps, n_iters, p_init, metrics
     metrics = np.zeros([n_iters, 7])
     for i_iter in range(n_iters):
         idx_to_fool = (margin_min > 0.0)
+        print(idx_to_fool)
 
         x_curr, x_best_curr = x[idx_to_fool], x_best[idx_to_fool]
+        print(x_best_curr.shape)
         y_curr, margin_min_curr = y[idx_to_fool], margin_min[idx_to_fool]
         loss_min_curr = loss_min[idx_to_fool]
         delta_curr = x_best_curr - x_curr
@@ -267,12 +269,12 @@ def square_attack_linf(model, x, y, corr_classified, eps, n_iters, p_init, metri
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Define hyperparameters.')
-    parser.add_argument('--model', type=str, default='pt_resnet', choices=models.all_model_names, help='Model name.')
+    parser.add_argument('--model', type=str, default='gvision', choices=models.all_model_names, help='Model name.')
     parser.add_argument('--attack', type=str, default='square_linf', choices=['square_linf', 'square_l2'], help='Attack.')
     parser.add_argument('--exp_folder', type=str, default='exps', help='Experiment folder to store all output.')
-    parser.add_argument('--gpu', type=str, default='7', help='GPU number. Multiple GPUs are possible for PT models.')
+    parser.add_argument('--gpu', type=str, default='1', help='GPU number. Multiple GPUs are possible for PT models.')
     parser.add_argument('--n_ex', type=int, default=10000, help='Number of test ex to test on.')
-    parser.add_argument('--p', type=float, default=0.05,
+    parser.add_argument('--p', type=float, default=0.3,
                         help='Probability of changing a coordinate. Note: check the paper for the best values. '
                              'Linf standard: 0.05, L2 standard: 0.1. But robust models require higher p.')
     parser.add_argument('--eps', type=float, default=0.05, help='Radius of the Lp ball.')
@@ -281,7 +283,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.loss = 'margin_loss' if not args.targeted else 'cross_entropy'
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+    # os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+
     dataset = 'mnist' if 'mnist' in args.model else 'cifar10' if 'cifar10' in args.model else 'imagenet'
     timestamp = str(datetime.now())[:-7]
     hps_str = '{} model={} dataset={} attack={} n_ex={} eps={} p={} n_iter={}'.format(
@@ -304,12 +307,21 @@ if __name__ == '__main__':
         x_test, y_test = data.datasets_dict[dataset](args.n_ex, size=299)
     x_test, y_test = x_test[:args.n_ex], y_test[:args.n_ex]
 
+
+
     if args.model == 'pt_post_avg_cifar10':
         x_test /= 255.0
         args.eps = args.eps / 255.0
 
-    models_class_dict = {'tf': models.ModelTF, 'pt': models.ModelPT}
-    model = models_class_dict[model_type](args.model, batch_size, gpu_memory)
+    if args.model == "gvision":
+        labelset = ["cat"]
+        model = models.GVisionModel(exp_name=f"eps={args.eps}_p={args.p}_attack={args.attack}_niters={args.n_iter}", correct_labelset=labelset, save_location="l2_cat")
+        y_test = np.array([0])
+
+    else:
+        models_class_dict = {'tf': models.ModelTF, 'pt': models.ModelPT}
+        model = models_class_dict[model_type](args.model, batch_size, gpu_memory)
+
 
     logits_clean = model.predict(x_test)
     corr_classified = logits_clean.argmax(1) == y_test
@@ -320,6 +332,7 @@ if __name__ == '__main__':
     y_target = utils.random_classes_except_current(y_test, n_cls) if args.targeted else y_test
     y_target_onehot = utils.dense_to_onehot(y_target, n_cls=n_cls)
     # Note: we count the queries only across correctly classified images
+
     n_queries, x_adv = square_attack(model, x_test, y_target_onehot, corr_classified, args.eps, args.n_iter,
                                      args.p, metrics_path, args.targeted, args.loss)
 
