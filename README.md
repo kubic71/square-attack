@@ -1,8 +1,14 @@
-## This fork tries to apply Square Attack on Google Vision API.
+## Square Attack on Google Vision API.
+This fork tries to apply Square attack on Google vision API
 Checkout my other repos for similar attacks with similar images
 - [RayS](https://github.com/kubic71/RayS)
 - [TREMBA](https://github.com/kubic71/TREMBA)
 
+## TODO
+- more examples
+- batch of images in low-query mode (max 300 queries per image)
+- some analysis and statistics of the results
+- application to other tasks other than image labeling
 
 ## Here are some examples
 ### Original cat image
