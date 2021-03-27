@@ -1,3 +1,22 @@
+## This fork tries to apply Square Attack on Google Vision API.
+Checkout my other repos for similar attacks with similar images
+- [RayS](https://github.com/kubic71/RayS)
+- [TREMBA](https://github.com/kubic71/TREMBA)
+
+
+## Here are some examples
+### Original cat image
+![](dataset/Cats/cat.png)
+
+### L_inf norm
+![](experiments/cat_linf4/eps=0.047058823529411764_p=0.15_attack=square_linf_niters=10000_1402.png)
+
+
+### L2 norm
+![](experiments/cat_l2/eps=7.8431372549019605_p=0.3_attack=square_l2_niters=10000_834.png)
+
+
+
 # Square Attack: a query-efficient black-box adversarial attack via random search
 **ECCV 2020**
 
