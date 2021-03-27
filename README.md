@@ -13,14 +13,14 @@ Checkout my other repos for similar attacks with similar images
 
 ## Here are some examples
 ### Original cat image
-![](dataset/Cats/cat.png)
+![](experiments/best_results/unmodified_cat.png)
 
 ### L_inf norm
-![](experiments/cat_linf4/eps=0.047058823529411764_p=0.15_attack=square_linf_niters=10000_1402.png)
+![](experiments/best_results/eps=0.047058823529411764_p=0.15_attack=square_linf_niters=10000_1402.png)
 
 
 ### L2 norm
-![](experiments/cat_l2/eps=7.8431372549019605_p=0.3_attack=square_l2_niters=10000_834.png)
+![](experiments/best_results/eps=7.8431372549019605_p=0.3_attack=square_l2_niters=10000_834.png)
 
 
 
