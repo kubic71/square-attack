@@ -15,11 +15,11 @@ Checkout my other repos for similar attacks with similar images
 ### Original cat image
 ![](experiments/best_results/unmodified_cat.png)
 
-### L_inf norm
+### L_inf=0.047 norm
 ![](experiments/best_results/eps=0.047058823529411764_p=0.15_attack=square_linf_niters=10000_1402.png)
 
 
-### L2 norm
+### L2=19.6 norm
 ![](experiments/best_results/eps=7.8431372549019605_p=0.3_attack=square_l2_niters=10000_834.png)
 
 
